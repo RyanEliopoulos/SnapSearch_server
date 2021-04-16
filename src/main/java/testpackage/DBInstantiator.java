@@ -40,8 +40,8 @@ public class DBInstantiator {
 
     private void insrtFile() {
 
-        String sql = "INSERT INTO photos (filedata)"
-                + "VALUES (?)";
+        String sql = "INSERT INTO photos (userid, filedata)"
+                + "VALUES (1, ?)";
 
         try {
             // Placeholder "file"
@@ -79,7 +79,8 @@ public class DBInstantiator {
 
             // Creating the table
             sql = "CREATE TABLE IF NOT EXISTS photos (\n"
-                    + "userid integer PRIMARY KEY, \n"
+                    + "photoid integer PRIMARY KEY, \n"
+                    + "userid integer,"
                     + "filedata blob);";
             statement.executeUpdate(sql);
 

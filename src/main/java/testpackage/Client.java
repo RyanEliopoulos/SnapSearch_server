@@ -5,13 +5,15 @@ import java.net.Socket;
 import java.net.InetSocketAddress;
 import java.io.OutputStream;
 
+import java.util.Scanner;
+
 public class Client {
 
     public static void main(String[] args) {
         System.out.print("Hello broski\n");
 
         // Preparing connection to server
-        InetSocketAddress targetAddress = new InetSocketAddress("localhost", 6971);
+        InetSocketAddress targetAddress = new InetSocketAddress("localhost", 6970);
         Socket clientsocket = new Socket();
 
         try {
@@ -19,13 +21,23 @@ public class Client {
             System.out.print("Connected to the server\n");
 
             OutputStream outstream = clientsocket.getOutputStream();
-            for (int i=49; i<69; i++) {
-                outstream.write(i);
-            }
+            Scanner scanner = new Scanner(System.in);
 
-            System.out.println("Transmission complete..sleeping..");
-            Thread.sleep(30000);
-            System.out.println("Back from sleep.  Closing client.");
+
+            while (true) {
+                String inputstring = scanner.nextLine();
+                if (inputstring == "Q") {
+                    System.out.println("User shutdown request");
+                    break;
+                }
+                else {
+                    for (char chr : inputstring.toCharArray()) {
+                        System.out.println("Typing \"" + chr + "\" to the socket");
+                        outstream.write((byte) chr);
+                    }
+                }
+
+            }
 
             clientsocket.close();
 

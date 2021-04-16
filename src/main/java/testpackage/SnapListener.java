@@ -4,16 +4,24 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.locks.ReentrantLock;
+import java.sql.*;
+
 
 
 public class SnapListener {
 
     private ReentrantLock mutex = new ReentrantLock();
 
+    public void SnapListener() {
+        // Setting up database stuff
+
+
+    }
+
     public void listen() {
 
         System.out.print("Hello!\n");
-        InetSocketAddress sadd = new InetSocketAddress("localhost", 6971);
+        InetSocketAddress sadd = new InetSocketAddress("localhost", 6970);
 
         try (ServerSocket serversocket = new ServerSocket()) {
             serversocket.bind(sadd);
