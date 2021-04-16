@@ -1,6 +1,7 @@
 package testpackage;
 
 
+import java.io.InputStream;
 import java.net.Socket;
 import java.net.InetSocketAddress;
 import java.io.OutputStream;
@@ -20,7 +21,8 @@ public class Client {
             clientsocket.connect(targetAddress);
             System.out.print("Connected to the server\n");
 
-            OutputStream outstream = clientsocket.getOutputStream();
+            OutputStream outstream = clientsocket.getOutputStream();  // Write to
+            InputStream instream = clientsocket.getInputStream();   // read from
             Scanner scanner = new Scanner(System.in);
 
 
@@ -28,6 +30,7 @@ public class Client {
                 String inputstring = scanner.nextLine();
                 if (inputstring == "Q") {
                     System.out.println("User shutdown request");
+                    outstream.write((byte) 'Q');
                     break;
                 }
                 else {

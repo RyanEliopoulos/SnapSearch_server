@@ -42,8 +42,6 @@ public class DBInterface {
     }
 
     public HashMap<String, byte[]> getPhotos(int userid) {
-        // userid will just be 1 for prototype
-
         //System.out.println("Attempting to pull photo info for user: " + userid);
 
         // Querying database
@@ -82,5 +80,23 @@ public class DBInterface {
             e.printStackTrace();
             return null;
         }
+    }
+
+
+    public int insertPhoto(int userid, byte[] filedata) {
+            String sql = "INSERT INTO photos (userid, filedata)"
+                    + "VALUES (?, ?)";
+            try {
+                PreparedStatement pstmt = this.conn.prepareStatement(sql);
+                pstmt.setInt(1, userid);
+                pstmt.setBytes(2, filedata);
+                pstmt.executeUpdate();
+
+            }
+            catch (SQLException e) {
+                e.printStackTrace();
+                return -1;
+            }
+            return 0;
     }
 }
