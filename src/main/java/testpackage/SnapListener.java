@@ -9,19 +9,16 @@ import java.sql.*;
 
 
 public class SnapListener {
+    // This is the top-level, primary thread listening for incoming client connections
 
     private ReentrantLock mutex = new ReentrantLock();
 
-    public void SnapListener() {
-        // Setting up database stuff
-
-
-    }
-
     public void listen() {
 
-        System.out.print("Hello!\n");
+
         InetSocketAddress sadd = new InetSocketAddress("localhost", 6970);
+        DBInterface dbiface = new DBInterface("latest.db");
+        dbiface.connect();
 
         try (ServerSocket serversocket = new ServerSocket()) {
             serversocket.bind(sadd);
@@ -33,7 +30,7 @@ public class SnapListener {
 
                 // Add a new thread here to deal with the socket
                 System.out.print("Client has connected to us. Giving control to the other thread\n");
-                ServerService service = new ServerService(activeSocket, mutex);
+                ServerService service = new ServerService(activeSocket, dbiface, mutex);
                 service.start();
                 System.out.println("New thread started..awaiting another call");
 
