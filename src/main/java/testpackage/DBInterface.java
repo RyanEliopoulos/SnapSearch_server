@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.sql.*;
 import java.util.HashMap;
 
+
 public class DBInterface {
     String dbname;
     Connection conn = null;
@@ -41,7 +42,8 @@ public class DBInterface {
 
     }
 
-    public HashMap<String, byte[]> getPhotos(int userid) {
+    //public HashMap<String, byte[]> getPhotos(int userid) {
+    public HashMap<String, Photo> getPhotos(int userid) {
         //System.out.println("Attempting to pull photo info for user: " + userid);
 
         // Querying database
@@ -54,7 +56,7 @@ public class DBInterface {
             ResultSet rs = pstmt.executeQuery();
 
             // Structuring data for caller
-            HashMap<String, byte[]> hm = new HashMap<>();
+            HashMap<String, Photo> hm = new HashMap<>();
             while (rs.next()) {
                 // pulling the binary data
                 InputStream instream = rs.getBinaryStream("filedata");
@@ -67,11 +69,14 @@ public class DBInterface {
                     return null;
                 }
                 byte[] photobytes = bout_stream.toByteArray();
+                Float longitude = rs.getFloat("longitude");
+                Float latitude = rs.getFloat("latitude");
+
                 // Pulling primary key
                 Integer photoid = rs.getInt("photoid");
-                //System.out.println("Photo ID is: " + photoid);
-                hm.put(photoid.toString(), photobytes);
+                Photo phto = new Photo(photoid, userid, longitude, latitude, photobytes);
 
+                hm.put(photoid.toString(), phto);
             }
             return hm;
         }
@@ -83,15 +88,27 @@ public class DBInterface {
     }
 
 
-    public int insertPhoto(int userid, byte[] filedata) {
-            String sql = "INSERT INTO photos (userid, filedata)"
-                    + "VALUES (?, ?)";
+    public int insertPhoto(int userid, byte[] filedata, float longitude, float latitude) {
+        // Remains unverified.
+
+
+
+            // Schema:
+            // photoid (PRIMARY KEY)
+            // userid (int)
+            // filedata (blob)
+            // longitude (real)
+            // latitude (real)
+
+            String sql = "INSERT INTO photos (userid, filedata, longitude, latitude)"
+                    + "VALUES (?, ?, ?, ?)";  //
             try {
                 PreparedStatement pstmt = this.conn.prepareStatement(sql);
                 pstmt.setInt(1, userid);
                 pstmt.setBytes(2, filedata);
+                pstmt.setFloat(3, longitude);
+                pstmt.setFloat(4, latitude);
                 pstmt.executeUpdate();
-
             }
             catch (SQLException e) {
                 e.printStackTrace();
@@ -99,4 +116,5 @@ public class DBInterface {
             }
             return 0;
     }
+
 }

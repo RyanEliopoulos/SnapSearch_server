@@ -155,37 +155,75 @@ public class ServerService extends Thread {
         // Need to query the DBInterface for the photos.
         // Need to translate to a hashmap somewhere along the way.
 
-
-        System.out.println("Attempting to send photos");
         // Encoding file binaries as b64
-        HashMap<String, byte[]> hm = this.dbiface.getPhotos(1);
-        Base64.Encoder b64 = Base64.getEncoder();
+        HashMap<String, Photo> hm = this.dbiface.getPhotos(1);
+        HashMap<String, String> jsonmap = new HashMap<String, String>();
 
-        // Creating new hashmap with the encoded binary
-        HashMap<String, String> encoded_map = new HashMap<String, String>();
-        Set st = hm.keySet();
-        String[] key_strings = (String[]) st.toArray(new String[0]);
-        for (String key : key_strings) {
-            String encoded_filedata = b64.encodeToString(hm.get(key));
-            encoded_map.put(key, encoded_filedata);
+        // Converting Photo objects to json string
+        Gson gson = new Gson();
+        for (String key : hm.keySet()) {
+            Photo tmpPhoto = hm.get(key);
+            String photoString = gson.toJson(tmpPhoto);
+            jsonmap.put(key, photoString);
         }
 
-        // Converting to a JSON string for transmission
-        Type photoMapping = new TypeToken<HashMap<String, String>>() {}.getType();
-        Gson gson = new Gson();
-        String jsonized = gson.toJson(encoded_map, photoMapping);
+        // Now to jsonify the jsonmap into a single string
+        Type JsonPhotoMap = new TypeToken<HashMap<String, String>>() {}.getType();
+        String finalString = gson.toJson(jsonmap, JsonPhotoMap);
+        System.out.println("Drumroll, please!");
+        System.out.println(finalString);
+
+
+
+
+//
+//        System.out.println("Attempting to send photos");
+//        // Encoding file binaries as b64
+//        //HashMap<String, byte[]> hm = this.dbiface.getPhotos(1);
+//        HashMap<String, Photo> hm = this.dbiface.getPhotos(1);
+//
+//        // Need to translate it to a <String, String> map where the values are JSON representations
+//        HashMap<String, String> jsonmap = new HashMap<String, String>();
+//        Gson gson = new Gson();
+//        Type PhotoMap = new TypeToken<HashMap<String, String>>() {}.getType();
+//        Base64.Encoder b64 = Base64.getEncoder();
+//
+//        for(String key: hm.keySet()) {
+//            // Encoding binary blob
+//            Photo tmp = hm.get(key);
+//            tmp.fileblob = b64.encodeToString(tmp.fileblob.getBytes(StandardCharsets.UTF_8));
+//            String jsonized = gson.toJson(tmp);
+//            System.out.println("Condition of the jsonized photo object: " + jsonized);
+//            jsonmap.put(key, jsonized);
+//        }
+
+        // Now to create
+        return 1;
+//        // Creating new hashmap with the encoded binary
+//        HashMap<String, String> encoded_map = new HashMap<String, String>();
+//        Set st = hm.keySet();
+//        String[] key_strings = (String[]) st.toArray(new String[0]);
+//        for (String key : key_strings) {
+//            String encoded_filedata = b64.encodeToString(hm.get(key));
+//            encoded_map.put(key, encoded_filedata);
+//        }
+//
+//        // Converting to a JSON string for transmission
+//        Type photoMapping = new TypeToken<HashMap<String, String>>() {}.getType();
+//        Gson gson = new Gson();
+//        String jsonized = gson.toJson(encoded_map, photoMapping);
 
         // Sending it down the pipe
         // This requires another translation to bytes first.
-        try {
-            ostream.write(jsonized.getBytes(StandardCharsets.UTF_8));
-            return 0;
-        }
-        catch (IOException e) {
-            System.out.println("Failed to send the jsonized photos through the pipe");
-            e.printStackTrace();
-            return -1;
-        }
+//        try {
+//            ostream.write(jsonized.getBytes(StandardCharsets.UTF_8));
+//            return 0;
+//        }
+//        catch (IOException e) {
+//            System.out.println("Failed to send the jsonized photos through the pipe");
+//            e.printStackTrace();
+//            return -1;
+//        }
     }
 
     private int readCommand(InputStream instream) {
