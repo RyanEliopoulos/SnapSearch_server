@@ -69,39 +69,30 @@ public class Client {
                         outstream.write((byte) 'P');
                         System.out.println("Photo response" + cr.readCommand(instream));
 
-
                         // Reading contents
                         CommandReader dr = new CommandReader();
                         String jsonString = dr.readCommand(dinstream);
-                        System.out.println("Here is the string");
-                        System.out.println(jsonString);
 
-
-                        // Extracting decoded binary data
+                        // Extracting the photo data
                         Gson gson = new Gson();
-                        Type photoMap = new TypeToken<HashMap<String, String>>() {}.getType();
-                        HashMap<String, String> pm = gson.fromJson(jsonString, photoMap);
-
-                        // Checking contents of pm
-                        System.out.println("pm key set" + pm.keySet());
-
-
                         Base64.Decoder dec = Base64.getDecoder();
-                        System.out.println("About to decode the b64");
-
-                        System.out.println("This is pm.get" + pm.get("2"));
-                        String b64string = pm.get("2");
-                        byte[] fileblob = dec.decode(b64string);
-
-                        System.out.println("About to writ eto file");
-                        // Writing to a file
-                        try {
-                            FileOutputStream fos = new FileOutputStream("C:/Users/Ryan/Yolo.png");
-                            fos.write(fileblob);
-                        }
-                        catch (IOException e) {
-                            System.out.println("Failed to write file blob");
-                            e.printStackTrace();
+                        Type JsonPhotoMap = new TypeToken<HashMap<String, String>>() {}.getType();
+                        // Turning the singleton string into the first layer
+                        HashMap<String, String> jsonMap = gson.fromJson(jsonString, JsonPhotoMap);
+                        // Turning the nested JSON objects into Java objects
+                        HashMap<String, Photo> photomap = new HashMap<String, Photo>();
+                        for (String key : jsonMap.keySet()) {
+                            String photoString = jsonMap.get(key);
+                            Photo phto = gson.fromJson(photoString, Photo.class);
+                            byte[] filedata = dec.decode(phto.encodedFileblob);
+                            try {
+                                FileOutputStream fos = new FileOutputStream("C:/Users/Ryan/" + key + "client.png");
+                                fos.write(filedata);
+                                fos.close();
+                            }
+                            catch (IOException e) {
+                                e.printStackTrace();
+                            }
                         }
                     }
                 }

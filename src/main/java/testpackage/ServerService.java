@@ -170,8 +170,17 @@ public class ServerService extends Thread {
         // Now to jsonify the jsonmap into a single string
         Type JsonPhotoMap = new TypeToken<HashMap<String, String>>() {}.getType();
         String finalString = gson.toJson(jsonmap, JsonPhotoMap);
-        System.out.println("Drumroll, please!");
-        System.out.println(finalString);
+
+        // Sending it down the pipe to the client
+        try {
+            ostream.write(finalString.getBytes(StandardCharsets.UTF_8));
+            return 0;
+        }
+        catch (IOException e) {
+            System.out.println("Encountered error sending the photo bytes to the client");
+            e.printStackTrace();
+            return -1;
+        }
 
 
 
@@ -198,7 +207,6 @@ public class ServerService extends Thread {
 //        }
 
         // Now to create
-        return 1;
 //        // Creating new hashmap with the encoded binary
 //        HashMap<String, String> encoded_map = new HashMap<String, String>();
 //        Set st = hm.keySet();
