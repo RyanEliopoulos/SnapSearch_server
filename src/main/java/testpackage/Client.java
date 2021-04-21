@@ -96,6 +96,30 @@ public class Client {
                         }
                     }
                 }
+                else if (inputstring.charAt(0) == 'U') {
+                    // Uploading a picture to the server
+                    System.out.println("Uploading picture to server");
+                    outstream.write((byte) 'U');
+                    CommandReader cr = new CommandReader();
+                    String response = cr.readCommand(instream);
+
+                    if (response.charAt(0) == 'E') {
+                        System.out.println("Error encountered:");
+                        System.out.println(response);
+                    }
+                    else {  // Established data connection
+                        int dataPort = Integer.parseInt(response.substring(1, response.length()));
+                        Socket dataSocket = new Socket("localhost", dataPort);
+                        InputStream dinstream = dataSocket.getInputStream();
+
+                        // Informing server of incoming picture
+
+
+
+                    }
+
+
+                }
                 else {
                     for (char chr : inputstring.toCharArray()) {
                         System.out.println("Typing \"" + chr + "\" to the socket");

@@ -118,6 +118,27 @@ public class ServerService extends Thread {
                         this.data_ss.close();
                         this.data_ss = null;
                         break;
+                    case 'U':
+                        System.out.println("Client has requested a picture upload");
+                        if (this.datasocket == null) {
+                            response = "ENoDataConnection\n".getBytes(StandardCharsets.UTF_8);
+                            ostream.write(response);
+                            break;
+                        }
+                        else {
+                            response = "A\n".getBytes(StandardCharsets.UTF_8);
+                        }
+
+                        // Reading from the socket
+                        InputStream din = this.datasocket.getInputStream();
+                        this.insertPhoto(din);
+
+
+                        // Now need to clean up the data connection
+                        this.datasocket.close();
+                        this.datasocket = null;
+                        this.data_ss.close();
+                        this.data_ss = null;
                 }
             }
             this.activeSocket.close();
@@ -152,8 +173,10 @@ public class ServerService extends Thread {
 
 
     private int sendPhotos(OutputStream ostream) {
-        // Need to query the DBInterface for the photos.
-        // Need to translate to a hashmap somewhere along the way.
+        /*
+            Extracts the photo info for userid 1
+            and sends a JSON-ified string to the client
+         */
 
         // Encoding file binaries as b64
         HashMap<String, Photo> hm = this.dbiface.getPhotos(1);
@@ -181,57 +204,11 @@ public class ServerService extends Thread {
             e.printStackTrace();
             return -1;
         }
+    }
 
-
-
-
-//
-//        System.out.println("Attempting to send photos");
-//        // Encoding file binaries as b64
-//        //HashMap<String, byte[]> hm = this.dbiface.getPhotos(1);
-//        HashMap<String, Photo> hm = this.dbiface.getPhotos(1);
-//
-//        // Need to translate it to a <String, String> map where the values are JSON representations
-//        HashMap<String, String> jsonmap = new HashMap<String, String>();
-//        Gson gson = new Gson();
-//        Type PhotoMap = new TypeToken<HashMap<String, String>>() {}.getType();
-//        Base64.Encoder b64 = Base64.getEncoder();
-//
-//        for(String key: hm.keySet()) {
-//            // Encoding binary blob
-//            Photo tmp = hm.get(key);
-//            tmp.fileblob = b64.encodeToString(tmp.fileblob.getBytes(StandardCharsets.UTF_8));
-//            String jsonized = gson.toJson(tmp);
-//            System.out.println("Condition of the jsonized photo object: " + jsonized);
-//            jsonmap.put(key, jsonized);
-//        }
-
-        // Now to create
-//        // Creating new hashmap with the encoded binary
-//        HashMap<String, String> encoded_map = new HashMap<String, String>();
-//        Set st = hm.keySet();
-//        String[] key_strings = (String[]) st.toArray(new String[0]);
-//        for (String key : key_strings) {
-//            String encoded_filedata = b64.encodeToString(hm.get(key));
-//            encoded_map.put(key, encoded_filedata);
-//        }
-//
-//        // Converting to a JSON string for transmission
-//        Type photoMapping = new TypeToken<HashMap<String, String>>() {}.getType();
-//        Gson gson = new Gson();
-//        String jsonized = gson.toJson(encoded_map, photoMapping);
-
-        // Sending it down the pipe
-        // This requires another translation to bytes first.
-//        try {
-//            ostream.write(jsonized.getBytes(StandardCharsets.UTF_8));
-//            return 0;
-//        }
-//        catch (IOException e) {
-//            System.out.println("Failed to send the jsonized photos through the pipe");
-//            e.printStackTrace();
-//            return -1;
-//        }
+    private int insertPhoto(InputStream instream) {
+        // outstanding
+        return -1;
     }
 
     private int readCommand(InputStream instream) {
