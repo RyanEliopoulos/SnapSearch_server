@@ -85,6 +85,7 @@ public class Client {
                             String photoString = jsonMap.get(key);
                             Photo phto = gson.fromJson(photoString, Photo.class);
                             byte[] filedata = dec.decode(phto.encodedFileblob);
+                            System.out.println("photoid: " + key);
                             try {
                                 FileOutputStream fos = new FileOutputStream("C:/Users/Ryan/" + key + "client.png");
                                 fos.write(filedata);
@@ -99,21 +100,44 @@ public class Client {
                 else if (inputstring.charAt(0) == 'U') {
                     // Uploading a picture to the server
                     System.out.println("Uploading picture to server");
-                    outstream.write((byte) 'U');
+                    outstream.write((byte) 'D');
                     CommandReader cr = new CommandReader();
                     String response = cr.readCommand(instream);
 
                     if (response.charAt(0) == 'E') {
-                        System.out.println("Error encountered:");
+                        System.out.println("Error encountered requesting data connection");
                         System.out.println(response);
                     }
                     else {  // Established data connection
                         int dataPort = Integer.parseInt(response.substring(1, response.length()));
                         Socket dataSocket = new Socket("localhost", dataPort);
-                        InputStream dinstream = dataSocket.getInputStream();
+                        OutputStream ostream = dataSocket.getOutputStream();
 
                         // Informing server of incoming picture
+                        System.out.println("informing server of incoming picture");
+                        outstream.write((byte) 'U');
 
+                        // Loading the picture data
+                        try {
+                            FileInputStream fis = new FileInputStream("C:/Users/Ryan/broodwar.jpg");
+                            byte[] filedata = fis.readAllBytes();
+                            Photo newphoto = new Photo(-1, 1, (float) 999.3, (float) 333.9, filedata);
+
+                            // Translating newphoto into a JSON String
+                            Gson gson = new Gson();
+                            String jsonPhoto = gson.toJson(newphoto);
+
+                            // Sending the contents to the server
+                            ostream.write(jsonPhoto.getBytes(StandardCharsets.UTF_8));
+                            System.out.println("Picture written");
+                            dataSocket.close();
+
+
+                        }
+                        catch (IOException e) {
+                            System.out.println("Encountered error reading new pic from disk");
+                            e.printStackTrace();
+                        }
 
 
                     }

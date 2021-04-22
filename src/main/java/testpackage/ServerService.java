@@ -49,7 +49,7 @@ public class ServerService extends Thread {
 
             Boolean stayalive = true;  // Updated once connection closes
             while (stayalive) {
-                System.out.println("Reading from socket");
+                System.out.println("Reading from command socket");
 
                 // Reading next commmand
                 int cmd = this.readCommand(instream);
@@ -98,8 +98,6 @@ public class ServerService extends Thread {
                         }
 
 
-                        //OutputStream dout = this.datasocket.getOutputStream();
-                        //dout.write(response);
                         try {
                             ostream.write(response);
                         }
@@ -123,22 +121,22 @@ public class ServerService extends Thread {
                         if (this.datasocket == null) {
                             response = "ENoDataConnection\n".getBytes(StandardCharsets.UTF_8);
                             ostream.write(response);
-                            break;
                         }
                         else {
                             response = "A\n".getBytes(StandardCharsets.UTF_8);
+                            ostream.write(response);
+
+                            // Reading from the socket
+                            InputStream din = this.datasocket.getInputStream();
+                            this.insertPhoto(din);
+
+                            // Now need to clean up the data connection
+                            this.datasocket.close();
+                            this.datasocket = null;
+                            this.data_ss.close();
+                            this.data_ss = null;
                         }
-
-                        // Reading from the socket
-                        InputStream din = this.datasocket.getInputStream();
-                        this.insertPhoto(din);
-
-
-                        // Now need to clean up the data connection
-                        this.datasocket.close();
-                        this.datasocket = null;
-                        this.data_ss.close();
-                        this.data_ss = null;
+                        break;
                 }
             }
             this.activeSocket.close();
@@ -178,7 +176,6 @@ public class ServerService extends Thread {
             and sends a JSON-ified string to the client
          */
 
-        // Encoding file binaries as b64
         HashMap<String, Photo> hm = this.dbiface.getPhotos(1);
         HashMap<String, String> jsonmap = new HashMap<String, String>();
 
@@ -207,8 +204,52 @@ public class ServerService extends Thread {
     }
 
     private int insertPhoto(InputStream instream) {
-        // outstanding
-        return -1;
+        // Read data from the connection
+        CommandReader cr = new CommandReader();
+        String jsonSingleton =  cr.readCommand(instream);
+
+        Gson gson = new Gson();
+        Photo phto = gson.fromJson(jsonSingleton, Photo.class);
+        Base64.Decoder decoder = Base64.getDecoder();
+
+        // Inserting into database
+        int ret = this.dbiface.insertPhoto(phto.userid,
+                                    decoder.decode(phto.encodedFileblob),
+                                    phto.longitude,
+                                    phto.latitude);
+
+        if (ret == -1) {
+            System.out.println("encountered error during insertPhoto call");
+            return -1;
+        }
+
+        return 0;
+
+//        // Converting to first layer hashmap
+//        // Establishing mapping type (gson requires generics to undergo this process for generics)
+//        Type JsonPhotoMap = new TypeToken<HashMap<String, String>>() {}.getType();
+//        Gson gson = new Gson();
+//        HashMap<String, String> jsonMap = gson.fromJson(jsonSingleton, JsonPhotoMap);
+//
+//        // Unpacking second layer of JSON and decoding the b64 binary blob
+//        for (String key : jsonMap.keySet()) {
+//            String stringyphoto = jsonMap.get(key);
+//            Photo unpackedPhoto = gson.fromJson(stringyphoto, Photo.class);
+//            byte[] rawbytes = decoder.decode(unpackedPhoto.encodedFileblob);
+//            // Inserting into the database
+//            int ret = this.dbiface.insertPhoto(unpackedPhoto.userid,
+//                                    rawbytes,
+//                                    unpackedPhoto.longitude,
+//                                    unpackedPhoto.latitude);
+//            if (ret == -1) {
+//                System.out.println("Failed to write photo to the database");
+//                System.out.println(unpackedPhoto);
+//            }
+//            else {
+//                System.out.println("Successfully inserted the picture into the database");
+//            }
+//        }
+
     }
 
     private int readCommand(InputStream instream) {

@@ -42,9 +42,8 @@ public class DBInterface {
 
     }
 
-    //public HashMap<String, byte[]> getPhotos(int userid) {
     public HashMap<String, Photo> getPhotos(int userid) {
-        //System.out.println("Attempting to pull photo info for user: " + userid);
+        // Pulls all picture data for the given userid.
 
         // Querying database
         String sql = "SELECT * FROM photos " +
@@ -89,9 +88,7 @@ public class DBInterface {
 
 
     public int insertPhoto(int userid, byte[] filedata, float longitude, float latitude) {
-        // Remains unverified.
-
-
+        // puts the photo data into the database. Works.
 
             // Schema:
             // photoid (PRIMARY KEY)
