@@ -32,7 +32,6 @@ public class Client {
             InputStream instream = clientsocket.getInputStream();   // read from
             Scanner scanner = new Scanner(System.in);
 
-
             while (true) {
                 String inputstring = scanner.next();
                 if (inputstring.charAt(0) == 'Q') {
@@ -67,7 +66,16 @@ public class Client {
 
                         // Sending request for photos
                         outstream.write((byte) 'P');
-                        System.out.println("Photo response" + cr.readCommand(instream));
+                        String cmdresponse = cr.readCommand(instream);
+                        if (cmdresponse.charAt(0) == 'A') {
+                            System.out.println("Server has accepted the request for photos");
+                        }
+                        else {
+                            System.out.println("Server reports error regarding photo download");
+                            System.out.println(cmdresponse);
+                            continue;
+                        }
+
 
                         // Reading contents
                         CommandReader dr = new CommandReader();
@@ -117,11 +125,22 @@ public class Client {
                         System.out.println("informing server of incoming picture");
                         outstream.write((byte) 'U');
 
+                        // Checking server acknowledgement
+                        response = cr.readCommand(instream);
+                        if (response.charAt(0) == 'E') {
+                            System.out.println("Server reports error on photo upload request");
+                            System.out.println(response);
+                            continue;
+                        }
+                        else {
+                            System.out.println("Server acknowledges photo upload request");
+                        }
+
                         // Loading the picture data
                         try {
-                            FileInputStream fis = new FileInputStream("C:/Users/Ryan/broodwar.jpg");
+                            FileInputStream fis = new FileInputStream("C:/Users/Ryan/wsu.jpg");
                             byte[] filedata = fis.readAllBytes();
-                            Photo newphoto = new Photo(-1, 1, (float) 999.3, (float) 333.9, filedata);
+                            Photo newphoto = new Photo(-1, 1, (float) 666.666, (float) 666.666, filedata);
 
                             // Translating newphoto into a JSON String
                             Gson gson = new Gson();
@@ -131,18 +150,12 @@ public class Client {
                             ostream.write(jsonPhoto.getBytes(StandardCharsets.UTF_8));
                             System.out.println("Picture written");
                             dataSocket.close();
-
-
                         }
                         catch (IOException e) {
                             System.out.println("Encountered error reading new pic from disk");
                             e.printStackTrace();
                         }
-
-
                     }
-
-
                 }
                 else {
                     for (char chr : inputstring.toCharArray()) {
@@ -152,44 +165,11 @@ public class Client {
                 }
 
             }
-
             clientsocket.close();
-
         }
         catch (Exception e) {
             System.out.print("heyo couldnt' connect for some reason\n");
             e.printStackTrace();
         }
-    }
-
-
-    private int readCommand(InputStream instream) {
-        // Returns the next command from the command connection
-        // BufferedReader (InputStreamReader(InputStream)
-
-        InputStreamReader inreader = new InputStreamReader(instream, StandardCharsets.UTF_8);
-        try {
-            int ret = inreader.read();
-            System.out.println("Server response: " + (char) ret);
-            return ret;
-        }
-        catch (IOException e) {
-            System.out.println("Error reading from data connection");
-            e.printStackTrace();
-            return -1;
-        }
-    }
-
-
-    private void acceptPhotos() {
-        // Reads from the data connection. Meant to be called by the 'P' command.
-        // Expects caller to know a data connection exists
-
-
-
-
-
-
-
     }
 }

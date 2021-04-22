@@ -165,7 +165,6 @@ public class ServerService extends Thread {
             e.printStackTrace();
             return -1;
         }
-
         return 1;
     }
 
@@ -213,6 +212,8 @@ public class ServerService extends Thread {
         Base64.Decoder decoder = Base64.getDecoder();
 
         // Inserting into database
+        // Acquiring mutex first
+        this.mutex.lock();
         int ret = this.dbiface.insertPhoto(phto.userid,
                                     decoder.decode(phto.encodedFileblob),
                                     phto.longitude,
@@ -222,34 +223,8 @@ public class ServerService extends Thread {
             System.out.println("encountered error during insertPhoto call");
             return -1;
         }
-
+        this.mutex.unlock();
         return 0;
-
-//        // Converting to first layer hashmap
-//        // Establishing mapping type (gson requires generics to undergo this process for generics)
-//        Type JsonPhotoMap = new TypeToken<HashMap<String, String>>() {}.getType();
-//        Gson gson = new Gson();
-//        HashMap<String, String> jsonMap = gson.fromJson(jsonSingleton, JsonPhotoMap);
-//
-//        // Unpacking second layer of JSON and decoding the b64 binary blob
-//        for (String key : jsonMap.keySet()) {
-//            String stringyphoto = jsonMap.get(key);
-//            Photo unpackedPhoto = gson.fromJson(stringyphoto, Photo.class);
-//            byte[] rawbytes = decoder.decode(unpackedPhoto.encodedFileblob);
-//            // Inserting into the database
-//            int ret = this.dbiface.insertPhoto(unpackedPhoto.userid,
-//                                    rawbytes,
-//                                    unpackedPhoto.longitude,
-//                                    unpackedPhoto.latitude);
-//            if (ret == -1) {
-//                System.out.println("Failed to write photo to the database");
-//                System.out.println(unpackedPhoto);
-//            }
-//            else {
-//                System.out.println("Successfully inserted the picture into the database");
-//            }
-//        }
-
     }
 
     private int readCommand(InputStream instream) {
