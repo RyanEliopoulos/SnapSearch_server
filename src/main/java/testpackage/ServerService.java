@@ -219,11 +219,11 @@ public class ServerService extends Thread {
                                     phto.longitude,
                                     phto.latitude);
 
+        this.mutex.unlock();
         if (ret == -1) {
             System.out.println("encountered error during insertPhoto call");
             return -1;
         }
-        this.mutex.unlock();
         return 0;
     }
 
