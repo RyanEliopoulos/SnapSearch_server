@@ -13,11 +13,11 @@ public class Photo {
 
     int photoid;
     int userid;
-    float longitude;
-    float latitude;
+    double longitude;
+    double latitude;
     public String encodedFileblob;
 
-    public Photo(int photoid, int userid, float longitude, float latitude, byte[] filebytes) {
+    public Photo(int photoid, int userid, double longitude, double latitude, byte[] filebytes) {
         this.photoid = photoid;
         this.userid = userid;
         this.longitude = longitude;

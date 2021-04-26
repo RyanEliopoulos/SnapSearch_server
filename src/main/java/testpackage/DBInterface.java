@@ -68,8 +68,8 @@ public class DBInterface {
                     return null;
                 }
                 byte[] photobytes = bout_stream.toByteArray();
-                Float longitude = rs.getFloat("longitude");
-                Float latitude = rs.getFloat("latitude");
+                double longitude = rs.getDouble("longitude");
+                double latitude = rs.getDouble("latitude");
 
                 // Pulling primary key
                 Integer photoid = rs.getInt("photoid");
@@ -87,7 +87,7 @@ public class DBInterface {
     }
 
 
-    public int insertPhoto(int userid, byte[] filedata, float longitude, float latitude) {
+    public int insertPhoto(int userid, byte[] filedata, double longitude, double latitude) {
         // puts the photo data into the database. Works.
 
             // Schema:
@@ -103,8 +103,8 @@ public class DBInterface {
                 PreparedStatement pstmt = this.conn.prepareStatement(sql);
                 pstmt.setInt(1, userid);
                 pstmt.setBytes(2, filedata);
-                pstmt.setFloat(3, longitude);
-                pstmt.setFloat(4, latitude);
+                pstmt.setDouble(3, longitude);
+                pstmt.setDouble(4, latitude);
                 pstmt.executeUpdate();
             }
             catch (SQLException e) {
