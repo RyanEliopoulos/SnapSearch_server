@@ -140,7 +140,7 @@ public class Client {
                         try {
                             FileInputStream fis = new FileInputStream("C:/Users/Ryan/wsu.jpg");
                             byte[] filedata = fis.readAllBytes();
-                            Photo newphoto = new Photo(-1, 1, (float) 666.666, (float) 666.666, filedata);
+                            Photo newphoto = new Photo(-1, 1, (double) 666.666, (double) 666.666, filedata);
 
                             // Translating newphoto into a JSON String
                             Gson gson = new Gson();
