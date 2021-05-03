@@ -6,40 +6,27 @@ import java.net.Socket;
 import java.util.concurrent.locks.ReentrantLock;
 import java.sql.*;
 
-
-
 public class SnapListener {
-    // This is the top-level, primary thread listening for incoming client connections
+  // This is the top-level, primary thread listening for incoming client connections
 
-    private ReentrantLock mutex = new ReentrantLock();
+  private ReentrantLock mutex = new ReentrantLock(); // Gatekeeper for db writes
 
-    public void listen() {
-
-
-        InetSocketAddress sadd = new InetSocketAddress("localhost", 6970);
-        DBInterface dbiface = new DBInterface("latest.db");
-        dbiface.connect();
-
-        try (ServerSocket serversocket = new ServerSocket()) {
-            serversocket.bind(sadd);
-            System.out.print("Here\n");
-            System.out.print(serversocket + "\n");
-
-            while (true) {
-                Socket activeSocket = serversocket.accept();
-
-                // Add a new thread here to deal with the socket
-                System.out.print("Client has connected to us. Giving control to the other thread\n");
-                ServerService service = new ServerService(activeSocket, dbiface, mutex);
-                service.start();
-                System.out.println("New thread started..awaiting another call");
-
-            }
-        }
-        catch (Exception e){
-            System.out.print("We've got a problem, officer");
-            System.out.print(e);
-        }
+  public void listen() {
+    // Daemon for establishing client connections.
+    // Each connection spins off a new thread.
+    DBInterface dbiface = new DBInterface("latest.db");
+    dbiface.connect();
+    InetSocketAddress sadd = new InetSocketAddress("localhost", 6970);
+    try (ServerSocket serversocket = new ServerSocket()) {
+      serversocket.bind(sadd);
+      while (true) {  // Infinite listen loop
+        Socket activeSocket = serversocket.accept();
+        ServerService service = new ServerService(activeSocket, dbiface, mutex);
+        service.start();
+      }
+    } catch (Exception e) {
+      System.out.print("Experienced issue in daemon thread");
+      e.printStackTrace();
     }
-
+  }
 }

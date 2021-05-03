@@ -6,112 +6,103 @@ import java.io.InputStream;
 import java.sql.*;
 import java.util.HashMap;
 
-
 public class DBInterface {
-    String dbname;
-    Connection conn = null;
+  String dbname;
+  Connection conn = null;
 
-    public DBInterface(String dbname) {
-        this.dbname = dbname;
+  public DBInterface(String dbname) {
+    this.dbname = dbname;
+  }
+
+  public int connect() {
+    try {
+      this.conn = DriverManager.getConnection("jdbc:sqlite:" + this.dbname);
+    } catch (SQLException e) {
+      System.out.println("Encountered sql exception connecting to database");
+      return -1;
     }
+    return 0;
+  }
 
-    public int connect() {
+  public void directcontrol() {
+    // For debugging
+    try {
+      String sql = "SELECT * FROM PHOTOS";
+      Statement stmt = this.conn.createStatement();
+      ResultSet rs = stmt.executeQuery(sql);
+      while (rs.next()) {
+        System.out.println(rs.getInt("photoid"));
+        System.out.println(rs.getInt("userid"));
+      }
+    } catch (SQLException e) {
+      System.out.println("Problem direct controlling");
+    }
+  }
+
+  public HashMap<String, Photo> getPhotos(int userid) {
+    // Pulls all picture data for the given userid.
+
+    // Querying database
+    String sql = "SELECT * FROM photos " + "WHERE userid=(?)";
+    try {
+      // Executing statement
+      PreparedStatement pstmt = this.conn.prepareStatement(sql);
+      pstmt.setInt(1, userid);
+      ResultSet rs = pstmt.executeQuery();
+
+      // Structuring data for caller
+      HashMap<String, Photo> hm = new HashMap<>();
+      while (rs.next()) {
+        // pulling the binary data
+        InputStream instream = rs.getBinaryStream("filedata");
+        ByteArrayOutputStream bout_stream = new ByteArrayOutputStream();
         try {
-            this.conn = DriverManager.getConnection("jdbc:sqlite:" + this.dbname);
+          bout_stream.writeBytes(instream.readAllBytes());
+        } catch (IOException e) {
+          System.out.println("Error reading photo data from database");
+          return null;
         }
-        catch (SQLException e) {
-            System.out.println("Encountered sql exception connecting to database");
-            return -1;
-        }
-        return 0;
+        byte[] photobytes = bout_stream.toByteArray();
+        double longitude = rs.getDouble("longitude");
+        double latitude = rs.getDouble("latitude");
+
+        // Pulling primary key
+        Integer photoid = rs.getInt("photoid");
+        Photo phto = new Photo(photoid, userid, longitude, latitude, photobytes);
+
+        hm.put(photoid.toString(), phto);
+      }
+      return hm;
+    } catch (SQLException e) {
+      System.out.println("Failed to create statement with database");
+      e.printStackTrace();
+      return null;
     }
+  }
 
-    public void directcontrol() {
-        try {
-            String sql = "SELECT * FROM PHOTOS";
-            Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery(sql);
-            while (rs.next()) {
-                System.out.println(rs.getInt("photoid"));
-                System.out.println(rs.getInt("userid"));
-            }
-        }
-        catch (SQLException e) {
-            System.out.println("Problem direct controlling");
-        }
+  public int insertPhoto(int userid, byte[] filedata, double longitude, double latitude) {
+    // puts the photo data into the database.
 
+    // Schema:
+    // photoid (PRIMARY KEY)
+    // userid (int)
+    // filedata (blob)
+    // longitude (real)
+    // latitude (real)
+
+    String sql =
+        "INSERT INTO photos (userid, filedata, longitude, latitude)" + "VALUES (?, ?, ?, ?)"; //
+    try {
+      PreparedStatement pstmt = this.conn.prepareStatement(sql);
+      pstmt.setInt(1, userid);
+      pstmt.setBytes(2, filedata);
+      pstmt.setDouble(3, longitude);
+      pstmt.setDouble(4, latitude);
+      pstmt.executeUpdate();
+    } catch (SQLException e) {
+      e.printStackTrace();
+      return -1;
     }
-
-    public HashMap<String, Photo> getPhotos(int userid) {
-        // Pulls all picture data for the given userid.
-
-        // Querying database
-        String sql = "SELECT * FROM photos " +
-                "WHERE userid=(?)";
-        try {
-            // Executing statement
-            PreparedStatement pstmt = this.conn.prepareStatement(sql);
-            pstmt.setInt(1, userid);
-            ResultSet rs = pstmt.executeQuery();
-
-            // Structuring data for caller
-            HashMap<String, Photo> hm = new HashMap<>();
-            while (rs.next()) {
-                // pulling the binary data
-                InputStream instream = rs.getBinaryStream("filedata");
-                ByteArrayOutputStream bout_stream = new ByteArrayOutputStream();
-                try {
-                    bout_stream.writeBytes(instream.readAllBytes());
-                }
-                catch (IOException e ) {
-                    System.out.println("Error reading photo data from database");
-                    return null;
-                }
-                byte[] photobytes = bout_stream.toByteArray();
-                double longitude = rs.getDouble("longitude");
-                double latitude = rs.getDouble("latitude");
-
-                // Pulling primary key
-                Integer photoid = rs.getInt("photoid");
-                Photo phto = new Photo(photoid, userid, longitude, latitude, photobytes);
-
-                hm.put(photoid.toString(), phto);
-            }
-            return hm;
-        }
-        catch (SQLException e) {
-            System.out.println("Failed to create statement with database");
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-
-    public int insertPhoto(int userid, byte[] filedata, double longitude, double latitude) {
-        // puts the photo data into the database. Works.
-
-            // Schema:
-            // photoid (PRIMARY KEY)
-            // userid (int)
-            // filedata (blob)
-            // longitude (real)
-            // latitude (real)
-
-            String sql = "INSERT INTO photos (userid, filedata, longitude, latitude)"
-                    + "VALUES (?, ?, ?, ?)";  //
-            try {
-                PreparedStatement pstmt = this.conn.prepareStatement(sql);
-                pstmt.setInt(1, userid);
-                pstmt.setBytes(2, filedata);
-                pstmt.setDouble(3, longitude);
-                pstmt.setDouble(4, latitude);
-                pstmt.executeUpdate();
-            }
-            catch (SQLException e) {
-                e.printStackTrace();
-                return -1;
-            }
-            return 0;
-    }
-
+    return 0;
+  }
 }
